@@ -54,7 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      # https://github.com/actions/setup-python/issues/672#issuecomment-1942095819
+      - uses: LizardByte/setup-python-action@v2024.919.163656
         with:
           python-version: "2.7"
 
