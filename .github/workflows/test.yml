@@ -18,6 +18,9 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
         python: [3.7, 3.8, 3.12]
+        exclude:
+          - os: macos-latest
+            python: 3.7
 
     name: "python ${{ matrix.python }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
