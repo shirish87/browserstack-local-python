@@ -50,10 +50,8 @@ class LocalBinary:
     LocalBinary._version = version
 
   def is_alpine(self):
-    grepOutput = subprocess.run("grep -w NAME /etc/os-release", capture_output=True, shell=True)
-    if grepOutput.stdout.decode('utf-8').find('Alpine') > -1:
-      return True
-    return False
+    response = subprocess.check_output(["grep", "-w", "NAME", "/etc/os-release"])
+    return response.decode('utf-8').find('Alpine') > -1
 
   def __make_path(self, dest_path):
     try:
@@ -78,14 +76,17 @@ class LocalBinary:
       'User-Agent': '/'.join(('browserstack-local-python', LocalBinary._version)),
       'Accept-Encoding': 'gzip, *',
     }
+
+    if sys.version_info < (3, 2):
+      # lack of support for gzip decoding for stream, response is expected to have a tell() method
+      # https://www.enricozini.org/blog/2011/cazzeggio/python-gzip/
+      headers.pop('Accept-Encoding', None)
+
     response = urlopen(self.http_path, headers=headers)
-    response_headers = {}
-
-    if callable(getattr(response, 'info', None)) and callable(getattr(response.info(), 'items', None)):
-      # only reads first header value for each key (if multiple values are present)
-      response_headers.update({key: value.strip() for key, value in response.info().items() if not key in response_headers})
-
-    total_size = int(response_headers.get('Content-Length', None) or '0')
+    try:
+      total_size = int(response.info().get('Content-Length', '').strip() or '0')
+    except:
+      total_size = int(response.info().get_all('Content-Length')[0].strip() or '0')
     bytes_so_far = 0
 
     dest_parent_dir = self.__available_dir()
@@ -93,7 +94,9 @@ class LocalBinary:
     if self.is_windows:
       dest_binary_name += '.exe'
 
-    gzip_file = gzip.GzipFile(fileobj=response, mode='rb') if response_headers.get('Content-Encoding', '').lower() == 'gzip' else None
+    content_encoding = response.info().get('Content-Encoding', '')
+    gzip_file = gzip.GzipFile(fileobj=response, mode='rb') if content_encoding.lower() == 'gzip' else None
+
     if os.getenv('BROWSERSTACK_LOCAL_DEBUG_GZIP') and gzip_file:
       print('using gzip in ' + headers['User-Agent'])
 
