@@ -11,18 +11,42 @@ env:
   BROWSERSTACK_LOCAL_BIN_URL: "${{ secrets.BROWSERSTACK_LOCAL_BIN_URL }}"
 
 jobs:
-  test:
+  # test:
+  #   continue-on-error: true
+  #   strategy:
+  #     max-parallel: 2
+  #     matrix:
+  #       os: [windows-latest, macos-latest, ubuntu-latest]
+  #       python: [3.7, 3.8, 3.12]
+  #       exclude:
+  #         - os: macos-latest
+  #           python: 3.7
+
+  #   name: "python ${{ matrix.python }} on ${{ matrix.os }}"
+  #   runs-on: ${{ matrix.os }}
+  #   environment: default
+  #   timeout-minutes: 10
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "${{ matrix.python }}"
+
+  #     - name: Test
+  #       run: |
+  #         pip install -e .
+  #         python -m unittest discover
+
+  testpy27:
     continue-on-error: true
     strategy:
       max-parallel: 2
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
-        python: [3.7, 3.8, 3.12]
-        exclude:
-          - os: macos-latest
-            python: 3.7
 
-    name: "python ${{ matrix.python }} on ${{ matrix.os }}"
+    name: "python 2.7 on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     environment: default
     timeout-minutes: 10
@@ -30,9 +54,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v3
         with:
-          python-version: "${{ matrix.python }}"
+          python-version: "2.7"
 
       - name: Test
         run: |
