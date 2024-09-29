@@ -1,0 +1,39 @@
+name: test-gzip
+
+on:
+  push:
+    branches: [gzip]
+  workflow_dispatch:
+
+env:
+  BROWSERSTACK_ACCESS_KEY: "${{ secrets.BROWSERSTACK_ACCESS_KEY }}"
+  BROWSERSTACK_LOCAL_DEBUG_GZIP: "true"
+  BROWSERSTACK_LOCAL_BIN_URL: "${{ secrets.BROWSERSTACK_LOCAL_BIN_URL }}"
+
+jobs:
+  test:
+    continue-on-error: true
+    strategy:
+      max-parallel: 2
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python: [2.7, 3.7, 3.12]
+
+    name: "node.js ${{ matrix.python }} on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    environment: default
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python }}"
+          architecture: x64
+          cache: "pip"
+
+      - name: Test
+        run: |
+          pip install -e .
+          python -m unittest discover
