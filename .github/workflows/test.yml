@@ -1,0 +1,65 @@
+name: test-gzip
+
+on:
+  push:
+    branches: [pr-gzip-test]
+  workflow_dispatch:
+
+env:
+  BROWSERSTACK_ACCESS_KEY: "${{ secrets.BROWSERSTACK_ACCESS_KEY }}"
+  BROWSERSTACK_LOCAL_DEBUG_GZIP: "true"
+  BROWSERSTACK_LOCAL_BIN_URL: "${{ secrets.BROWSERSTACK_LOCAL_BIN_URL }}"
+
+jobs:
+  test:
+    continue-on-error: true
+    strategy:
+      max-parallel: 2
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python: [3.7, 3.8, 3.12]
+        exclude:
+          - os: macos-latest
+            python: 3.7
+
+    name: "python ${{ matrix.python }} on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    environment: default
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python }}"
+
+      - name: Test
+        run: |
+          pip install -e .
+          python -m unittest discover
+
+  testpy27:
+    continue-on-error: true
+    strategy:
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    name: "python 2.7 on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    environment: default
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # https://github.com/actions/setup-python/issues/672#issuecomment-1942095819
+      - uses: LizardByte/setup-python-action@v2024.919.163656
+        with:
+          python-version: "2.7"
+
+      - name: Test
+        run: |
+          pip install -e .
+          python -m unittest discover
