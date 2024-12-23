@@ -3,15 +3,9 @@ from browserstack.bserrors import BrowserStackLocalError
 import gzip
 
 try:
-  import urllib.request
-
-  def urlopen(url, headers=None):
-    return urllib.request.urlopen(urllib.request.Request(url, headers=headers))
+    from urllib.request import urlopen, Request
 except ImportError:
-  import urllib2
-      
-  def urlopen(url, headers=None):
-    return urllib2.urlopen(urllib2.Request(url, headers=headers))
+    from urllib2 import urlopen, Request
 
 class LocalBinary:
   _version = None
@@ -21,8 +15,6 @@ class LocalBinary:
     self.is_windows = False
     osname = platform.system()
     source_url = "https://www.browserstack.com/local-testing/downloads/binaries/"
-    if os.environ.get('BROWSERSTACK_LOCAL_BIN_URL'):
-      source_url = os.environ.get('BROWSERSTACK_LOCAL_BIN_URL')
 
     if osname == 'Darwin':
       self.http_path = source_url + "BrowserStackLocal-darwin-x64"
@@ -81,7 +73,7 @@ class LocalBinary:
       # lack of support for gzip decoding for stream, response is expected to have a tell() method
       headers.pop('Accept-Encoding', None)
 
-    response = urlopen(self.http_path, headers=headers)
+    response = urlopen(Request(self.http_path, headers=headers))
     try:
       total_size = int(response.info().get('Content-Length', '').strip() or '0')
     except:
